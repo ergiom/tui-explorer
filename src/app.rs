@@ -1,4 +1,4 @@
-use std::error;
+use std::{error, fs::read_dir, path::{Path, PathBuf}};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -8,15 +8,16 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 pub struct App {
     /// Is the application running?
     pub running: bool,
-    /// counter
-    pub counter: u8,
+    pub path: PathBuf,
+    pub error: String,
 }
 
 impl Default for App {
     fn default() -> Self {
         Self {
             running: true,
-            counter: 0,
+            path: std::env::current_dir().expect("Couldn't read current dir"),
+            error: "".into(),
         }
     }
 }
@@ -35,15 +36,21 @@ impl App {
         self.running = false;
     }
 
-    pub fn increment_counter(&mut self) {
-        if let Some(res) = self.counter.checked_add(1) {
-            self.counter = res;
-        }
+    pub fn current_dir(&self) -> Box<Path> {
+        self.path.clone().into_boxed_path()
     }
 
-    pub fn decrement_counter(&mut self) {
-        if let Some(res) = self.counter.checked_sub(1) {
-            self.counter = res;
+    pub fn current_dir_items(&self) -> Vec<String> {
+        match read_dir(self.current_dir()) {
+            Ok(iter) => {
+                iter.filter_map(Result::ok)
+                    .map(|entry| entry.file_name())
+                    .map(|name| name.into_string())
+                    .filter_map(Result::ok)
+                    .collect()
+
+            },
+            Err(_) => todo!(),
         }
     }
 }
