@@ -1,6 +1,8 @@
-use std::{error, fs::read_dir, path::{Path, PathBuf}};
+use std::{error, fs::{read_dir, DirEntry}, path::{Path, PathBuf}};
 
 use ratatui::widgets::ListState;
+
+use crate::file_types::FileType;
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -13,7 +15,7 @@ pub struct App {
     pub path: PathBuf,
     pub error: String,
     pub list_state: ListState,
-    items: Vec<String>,
+    items: Vec<DirEntry>,
 }
 
 impl Default for App {
@@ -49,8 +51,18 @@ impl App {
         self.path.clone().into_boxed_path()
     }
 
-    pub fn current_dir_items(&self) -> Vec<String> {
-        self.items.clone()
+    pub fn current_dir_items(&self) -> Vec<(FileType, String)> {
+        self.items.iter()
+            .filter_map(|entry| {
+                let file_type = entry.file_type().ok().map(std::fs::FileType::into);
+                let file_name = entry.file_name().into_string().ok();
+
+                match (file_type, file_name) {
+                    (Some(file_type), Some(file_name)) => Some((file_type, file_name)),
+                    (_, _) => None,
+                }
+            })
+            .collect()
     }
 
     pub fn select_next_item(&mut self) {
@@ -70,13 +82,10 @@ impl App {
     }
 }
 
-fn dir_items(path: Box<Path>) -> Vec<String> {
+fn dir_items(path: Box<Path>) -> Vec<DirEntry> {
     match read_dir(path) {
         Ok(iter) => {
             iter.filter_map(Result::ok)
-                .map(|entry| entry.file_name())
-                .map(|name| name.into_string())
-                .filter_map(Result::ok)
                 .collect()
 
         },
