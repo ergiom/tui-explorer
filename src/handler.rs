@@ -14,6 +14,12 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.quit();
             }
         }
+        KeyCode::Down => {
+            app.select_next_item();
+        }
+        KeyCode::Up => {
+            app.select_previous_item();
+        }
         _ => {}
     }
     Ok(())
