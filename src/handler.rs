@@ -20,6 +20,12 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Up => {
             app.select_previous_item();
         }
+        KeyCode::Left => {
+            app.go_back();
+        }
+        KeyCode::Right => {
+            app.go_into();
+        }
         _ => {}
     }
     Ok(())

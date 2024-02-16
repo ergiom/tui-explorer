@@ -80,6 +80,27 @@ impl App {
             self.list_state.select(Some(new_index));
         }
     }
+
+    pub fn go_back(&mut self) {
+        if let Some(path) = self.path.parent() {
+            self.items = dir_items(path.into());
+            self.path = PathBuf::from(path.to_path_buf());
+            self.list_state.select(0.into());
+        }
+    }
+
+    pub fn go_into(&mut self) {
+        let items = self.current_dir_items();
+        if let Some((file_type, file_name)) = self.list_state.selected()
+            .and_then(|i| items.get(i)) {
+                if let FileType::DIR = file_type {
+                    self.path.push(file_name);
+                    self.items = dir_items(self.current_dir());
+                    self.list_state.select(0.into());
+                }
+            }
+
+    }
 }
 
 fn dir_items(path: Box<Path>) -> Vec<DirEntry> {
