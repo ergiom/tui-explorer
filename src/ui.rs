@@ -1,5 +1,5 @@
 use ratatui::{
-    style::{Color, Style}, text::{Line, Span}, widgets::List, Frame
+    layout::{Constraint, Layout, Rect}, style::{Color, Style}, text::{Line, Span}, widgets::{Block, Borders, List, Paragraph}, Frame
 };
 
 use crate::{app::App, file_types::FileType};
@@ -22,6 +22,15 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         frame.size(),
         &mut app.list_state,
     );
+
+    if app.has_error() {
+        frame.render_widget(
+            Paragraph::new("OK")
+                .alignment(ratatui::layout::Alignment::Center)
+                .block(Block::default().title("Error").borders(Borders::ALL)),
+            popup(frame.size(), 40, 40)
+        );
+    }
 }
 
 fn file_type_to_span(file_type: FileType) -> Span<'static> {
@@ -31,4 +40,24 @@ fn file_type_to_span(file_type: FileType) -> Span<'static> {
         FileType::SYMLINK => Span::default().content("L "),
         FileType::OTHER => Span::default().content("  "),
     }
+}
+
+fn popup(r: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(ratatui::layout::Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
