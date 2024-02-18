@@ -70,6 +70,9 @@ impl App {
             return;
         }
         let total = self.items.len();
+        if total == 0 {
+            return;
+        }
 
         if let Some(current) = self.list_state.selected() {
             let new_index = std::cmp::min(current + 1, total - 1);
