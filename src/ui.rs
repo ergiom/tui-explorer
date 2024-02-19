@@ -5,6 +5,42 @@ use ratatui::{
 use crate::{app::App, file_types::FileType};
 
 pub fn render(app: &mut App, frame: &mut Frame) {
+    draw_main_view(app, frame);
+    if app.has_error() {
+        draw_error_popup(app, frame);
+    }
+}
+
+fn draw_error_popup(app: &mut App, frame: &mut Frame) {
+    let popup = popup(frame.size(), 40, 40);
+    let outer_block = Block::default()
+        .borders(Borders::ALL)
+        .title("Error");
+
+    let inner = outer_block.inner(popup);
+    let layout = Layout::default()
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(80),
+            Constraint::Min(1),
+        ])
+        .split(inner);
+
+    frame.render_widget(outer_block, popup);
+
+    frame.render_widget(
+        Paragraph::new(app.error.clone())
+            .alignment(ratatui::layout::Alignment::Center),
+        layout[0],
+    );
+    frame.render_widget(
+        Paragraph::new("OK")
+            .alignment(ratatui::layout::Alignment::Center),
+        layout[1],
+    );
+}
+
+fn draw_main_view(app: &mut App, frame: &mut Frame) {
     let items: Vec<Line> = app.current_dir_items().into_iter()
         .map(|(file_type, file_name)| {
             Line::default().spans(vec![
@@ -23,34 +59,6 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         &mut app.list_state,
     );
 
-    if app.has_error() {
-        let popup = popup(frame.size(), 40, 40);
-        let outer_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Error");
-
-        let inner = outer_block.inner(popup);
-        let layout = Layout::default()
-            .direction(ratatui::layout::Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(80),
-                Constraint::Min(1),
-            ])
-            .split(inner);
-
-        frame.render_widget(outer_block, popup);
-
-        frame.render_widget(
-            Paragraph::new(app.error.clone())
-                .alignment(ratatui::layout::Alignment::Center),
-            layout[0],
-        );
-        frame.render_widget(
-            Paragraph::new("OK")
-                .alignment(ratatui::layout::Alignment::Center),
-            layout[1],
-        );
-    }
 }
 
 fn file_type_to_span(file_type: FileType) -> Span<'static> {
