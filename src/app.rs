@@ -16,6 +16,7 @@ pub struct App {
     pub error: String,
     pub list_state: ListState,
     items: Vec<DirEntry>,
+    pub show_details: bool,
 }
 
 impl Default for App {
@@ -29,6 +30,7 @@ impl Default for App {
             list_state: ListState::default()
                 .with_selected(Some(0)),
             items: dir_items(path.into_boxed_path()),
+            show_details: false,
         }
     }
 }
@@ -51,6 +53,22 @@ impl App {
         self.path.clone().into_boxed_path()
     }
 
+    fn show_details(&mut self) {
+        self.show_details = true;
+    }
+
+    pub fn confirm(&mut self) {
+        if self.has_error() {
+            self.clear_error();
+        }
+        else if self.show_details {
+            self.hide_details();
+        }
+        else {
+            self.show_details();
+        }
+    }
+
     pub fn current_dir_items(&self) -> Vec<(FileType, String)> {
         self.items.iter()
             .filter_map(|entry| {
@@ -66,7 +84,7 @@ impl App {
     }
 
     pub fn select_next_item(&mut self) {
-        if self.has_error() {
+        if self.navigation_locked() {
             return;
         }
         let total = self.items.len();
@@ -81,7 +99,7 @@ impl App {
     }
 
     pub fn select_previous_item(&mut self) {
-        if self.has_error() {
+        if self.navigation_locked() {
             return;
         }
         if let Some(current) = self.list_state.selected() {
@@ -91,7 +109,7 @@ impl App {
     }
 
     pub fn go_back(&mut self) {
-        if self.has_error() {
+        if self.navigation_locked() {
             return;
         }
         if let Some(path) = self.path.parent() {
@@ -103,7 +121,7 @@ impl App {
     }
 
     pub fn go_into(&mut self) {
-        if self.has_error() {
+        if self.navigation_locked() {
             return;
         }
         let items = self.current_dir_items();
@@ -117,15 +135,19 @@ impl App {
             }
     }
 
-    pub fn has_error(&mut self) -> bool {
+    pub fn has_error(&self) -> bool {
         !self.error.is_empty()
     }
 
-    pub fn clear_error(&mut self) {
+    fn clear_error(&mut self) {
         if self.has_error() {
             self.error.clear();
             self.go_back();
         }
+    }
+
+    fn hide_details(&mut self) {
+        self.show_details = false;
     }
 
     fn dir_items(&mut self, path: Box<Path>) -> Vec<DirEntry> {
@@ -136,10 +158,15 @@ impl App {
 
             },
             Err(error) => {
+                self.hide_details();
                 self.error.push_str(error.to_string().as_str());
                 Vec::new()
             },
         }
+    }
+
+    fn navigation_locked(&self) -> bool {
+        self.has_error() || self.show_details
     }
 }
 

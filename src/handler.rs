@@ -27,7 +27,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             app.go_into();
         }
         KeyCode::Enter => {
-            app.clear_error();
+            app.confirm();
         }
         _ => {}
     }
