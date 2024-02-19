@@ -24,11 +24,31 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     );
 
     if app.has_error() {
+        let popup = popup(frame.size(), 40, 40);
+        let outer_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Error");
+
+        let inner = outer_block.inner(popup);
+        let layout = Layout::default()
+            .direction(ratatui::layout::Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(80),
+                Constraint::Min(1),
+            ])
+            .split(inner);
+
+        frame.render_widget(outer_block, popup);
+
+        frame.render_widget(
+            Paragraph::new(app.error.clone())
+                .alignment(ratatui::layout::Alignment::Center),
+            layout[0],
+        );
         frame.render_widget(
             Paragraph::new("OK")
-                .alignment(ratatui::layout::Alignment::Center)
-                .block(Block::default().title("Error").borders(Borders::ALL)),
-            popup(frame.size(), 40, 40)
+                .alignment(ratatui::layout::Alignment::Center),
+            layout[1],
         );
     }
 }
