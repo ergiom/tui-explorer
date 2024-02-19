@@ -35,6 +35,7 @@ impl Default for App {
     }
 }
 
+// TODO - split this model
 impl App {
     /// Constructs a new instance of [`App`].
     pub fn new() -> Self {
@@ -54,7 +55,12 @@ impl App {
     }
 
     fn show_details(&mut self) {
-        self.show_details = true;
+        if let Some(index) = self.list_state.selected() {
+            if self.items.len() < index {
+                self.show_details = true;
+            }
+        }
+
     }
 
     pub fn confirm(&mut self) {
