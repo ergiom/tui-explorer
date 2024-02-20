@@ -56,11 +56,16 @@ impl App {
 
     fn show_details(&mut self) {
         if let Some(index) = self.list_state.selected() {
-            if self.items.len() < index {
+            if self.items.len() > index {
                 self.show_details = true;
             }
         }
 
+    }
+
+    pub fn details(&self) -> Result<&DirEntry, ()> {
+        let index = self.list_state.selected().ok_or(())?;
+        self.items.get(index).ok_or(())
     }
 
     pub fn confirm(&mut self) {

@@ -1,3 +1,5 @@
+use std::os::windows::fs::MetadataExt;
+
 use ratatui::{
     layout::{Constraint, Layout, Rect}, style::{Color, Style}, text::{Line, Span}, widgets::{Block, Borders, List, Paragraph}, Frame
 };
@@ -8,6 +10,31 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     draw_main_view(app, frame);
     if app.has_error() {
         draw_error_popup(app, frame);
+    }
+    else if app.show_details {
+        draw_details(app, frame);
+    }
+}
+
+fn draw_details(app: &mut App, frame: &mut Frame) {
+    if let Ok(entry) = app.details() {
+        let outer = Block::new().borders(Borders::ALL).title(entry.file_name().into_string().expect("Couldn't parse item's name"));
+        let popup_area = popup(frame.size(), 40, 40);
+        let inner_area = outer.inner(popup_area);
+
+        frame.render_widget(outer, popup_area);
+
+        if let Ok(metadata) = entry.metadata() {
+            let list = List::new(vec![
+                format!("Size: {}", metadata.file_size()),
+                format!("Creation time: {}", metadata.creation_time()),
+                format!("Last access: {}", metadata.last_access_time()),
+            ]);
+            frame.render_widget(list, inner_area);
+        }
+    }
+    else {
+
     }
 }
 
